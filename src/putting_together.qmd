@@ -1,0 +1,100 @@
+# Section 1
+1. Install the `palmerpenguins` package and load the `penguins` dataset it contains.
+```{r}
+library(palmerpenguins)
+penguins <- penguins
+```
+
+# Section 2
+2. Add an additional column `TRUE`/`FALSE` values indicating whether there are missing values for each penguin. 
+```{r}
+penguins["contains_missing"] <- !complete.cases(penguins)
+```
+
+# Section 3
+3. Find the average bill length and flipper length for each species of penguin.
+```{r}
+avg_bill <- mean(penguins$bill_length_mm, na.rm = TRUE)
+avg_flipper <- mean(penguins$flipper_length_mm, na.rm = TRUE)
+```
+
+# Section 4
+4. Write a function `species_mean()` that calculates the mean of a numeric variable for each species. Document it with Roxygen2-style comments.
+
+```{r}
+#' Calculates the mean of each numeric variable grouped by species; excludes non-numeric columns.
+#'
+#' @returns A df matching the above description
+#' @export
+#'
+#' @examples
+species_mean <- function() {
+  # Get mean for each col grouped by species
+  mean_df <- aggregate(. ~ species, penguins, mean)
+  
+  # Delete non-numeric cols
+  for (cname in names(penguins)) {
+    ctype <- class(penguins[, cname])
+    if (ctype != "integer" && ctype != "numeric" && cname != "species") {
+      mean_df[cname] <- NULL
+    }
+  }
+  
+  return(mean_df)
+}
+```
+
+# Section 5
+5. Create a scatter plot of flipper length vs. body mass, with different symbols and colours for each species.
+
+```{r}
+library("ggplot2")
+
+plt <- ggplot() +
+  geom_point(
+    aes(x = flipper_length_mm, y = body_mass_g, shape = factor(species), colour = factor(species), size=factor(species)),
+    penguins,
+    na.rm = TRUE
+  ) +
+  labs(x = "Flipper length (mm)", y = "Body mass (g)", shape = "Species", colour = "Species", size = "Species")
+```
+
+
+# Section 6
+6. Add points to your scatter plot to show the species-specific mean values, using a different shape or colour.
+
+```{r}
+sm <- species_mean()
+sm$species <- paste(sm$species, " mean")
+
+plt +
+  geom_point(
+    aes(x = flipper_length_mm, y = body_mass_g, shape = factor(species), colour = factor(species), size=factor(species)),
+    sm, na.rm = TRUE
+  ) +
+  scale_colour_manual(values = c(
+    "Adelie" = "#ff000055",
+    "Chinstrap" = "#00ff0055",
+    "Gentoo" = "#0000ff55",
+    "Adelie  mean" = "red",
+    "Chinstrap  mean" = "green",
+    "Gentoo  mean" = "blue"
+  )) +
+  scale_shape_manual(values = c(
+    "Adelie" = 16,
+    "Chinstrap" = 17,
+    "Gentoo" = 15,
+    "Adelie  mean" = 16,
+    "Chinstrap  mean" = 17,
+    "Gentoo  mean" = 15
+  )) +
+  scale_size_manual(values = c(
+    "Adelie" = 2,
+    "Chinstrap" = 2,
+    "Gentoo" = 2,
+    "Adelie  mean" = 4,
+    "Chinstrap  mean" = 4,
+    "Gentoo  mean" = 4
+  ))
+```
+

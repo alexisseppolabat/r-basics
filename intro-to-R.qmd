@@ -196,7 +196,10 @@ Use `c()` to add a missing value to the start of the vector `x`. How does that i
 :::
 
 ```{r}
-# your code goes here
+x <- c(NA, 0:5)
+x
+mean(x)
+median(x)
 ``` 
 
 ## Matricies and Arrays 
@@ -215,7 +218,8 @@ Make a 3 by 2 matrix $B$ containing the numbers 1 to 6.
 :::
 
 ```{r}
-# your code goes here
+B <- matrix(1:6, nrow=3)
+B
 ```
 
 :::{.callout-tip title="Test your understanding"}
@@ -224,7 +228,7 @@ Use `%*% to calculate $AB$.
 :::
 
 ```{r}
-# your code goes here
+A %*% B
 ```
 
 :::{.callout-tip title="Test your understanding"}
@@ -240,14 +244,19 @@ C = \begin{bmatrix}
 \end{bmatrix}.
 $$ {#eq-matrix-c}
 
-
 ```{r}
-#your code goes here
+C <- matrix(c(1, 1, 0, 0, 1, 1, 0, 0, 1), nrow = 3, byrow = TRUE)
+C_inv <- solve(C)
 ```
 
 You will often want to calculate row-wise or column-wise summary statistics of matrices and other grid-like data structures. 
 
 Some summary statistics have nice built-in functions such as `rowSums()` and `colSums()`. For less common summaries we can use the `apply()` function to _apply_ another function to each row of column of a matrix.  
+
+```{r}
+A
+```
+
 
 ```{r}
 rowSums(A)
@@ -273,8 +282,18 @@ Calculate the column means of $C$ and the row medians of $C^{-1}$.
 :::
 
 ```{r}
-# Your code goes here
+apply(X = C, MARGIN = 2, FUN = mean)
 ```
+
+```{r}
+colMeans(C)
+```
+
+```{r}
+apply(C_inv, MARGIN = 1, FUN = median)
+C_inv
+```
+
 
 :::{.callout-tip}
 
@@ -290,8 +309,15 @@ To show the documentation for a function, put a question mark before its name. `
 :::{.callout-tip title="Test your understanding"}
 
 - What is the second argument of `max()` and what does it do? 
+Flag to determine whether missing vals should be removed or not
 
 - Look at the documentation for `rowSums()`. What subtle difference is there between `rowSums(A)` and `apply(X = A, MARGIN = 1, FUN = sum)`?
+
+*Answer*
+- Faster than apply
+If na.rm = FALSE and either NaN or NA appears in a sum, the result will be one of NaN or NA, but which might be platform-dependent.
+
+
 :::
 
 ## Data Frames 
@@ -361,27 +387,43 @@ Subset the `grades` data frame to extract the id and score of the students whose
 
 ```{r}
 # your code goes here
+grades[grades$score>87, c("score", "student_id")]
 ```
 
 :::{.callout-tip title="Test your understanding"}
 
 Is there any difference between `grades$class` and `grades[ ,"class"]`? 
+
+*Answer*
+- No difference
 :::
 
 ```{r}
-# your code goes here
+class(grades$class)
+class(grades[, "class"])
 ```
 
 You can add elements to a data.frame by assigning them to non-existent columns or rows. (Be careful of the latter!) 
 
 ```{r}
 grades$gender <- rep("Female", 6)
+grades
 ```
 
 :::{.callout-tip title="Test your understanding"}
 
 Make up a vector with an additional entry and try adding it as a 7th row of `grades`. What happens? Why do you think that happens? 
 :::
+```{r}
+extra_student <- data.frame(
+  student_id = 7,
+  score = 57,
+  class = "Pass",
+  pass = TRUE,
+  gender = "Male"
+)
+rbind(grades, extra_student)
+```
 
 ## Lists 
 
@@ -393,6 +435,7 @@ zv <- list(
   surname = "Varty",
   years_at_imperial = 4, 
   modules = c('Data Science', "Ethical MLDS"))
+zv
 ```
 
 You can even get wild and have nested lists, where elements of the list are themselves lists! 
@@ -411,9 +454,11 @@ zv <- list(
                         students = 95,
                         online = TRUE))
   )
+zv
 ```
 
 R also has some other, application specific, data structures but under the hood these are usually just lists.  
+
 
 ## Reading and Writing Data 
 
@@ -433,6 +478,7 @@ and re-load it from the CSV we just created
 
 ```{r}
 grades <- read.csv("grades.csv")
+grades
 ```
 
 
@@ -446,12 +492,21 @@ Follow the previous example to use `saveRDS()` and `readRDS()` to save the `zv` 
 :::
 
 ```{r}
-# your code goes here
+saveRDS(zv, "zv_data.rds")
+rm(zv)
+zv
+zv <- readRDS("zv_data.rds")
+zv
 ```
 
 > **Note:** It is important to know where R is running. This is the so-called working directory). Use `pwd` in the terminal or `getwd()` in R to find this out.
 >
 > If your code is run from a notebook document like Rmd, qmd and jupytper notebook code and any file paths will be run from the location of the notebook.
+
+```{r}
+getwd()
+```
+
 
 # 2. R as a statistical programming language 
 
@@ -481,11 +536,29 @@ Describe to your neighbour which probability density functions are being referen
 This same feature allows us to easily plot probability density functions.
 
 ```{r}
+x <- (-100:100 / 100) * 5
+n <- dnorm(x, 0, 1, log = FALSE)
+plot(x, n, type="l")
+```
+
+
+
+
+
+```{r}
 x <- seq(from = -3,to = 3, by = 0.01)
 density <- dnorm(x = x, mean = 0 , sd = 1)
 
 plot(x = x, y = density, type = "l")
 ```
+
+```{r}
+x <- seq(from = -3,to = 3, by = 0.01)
+density <- dunif(x = x, min = -3, max = 3, log = FALSE)
+
+plot(x = x, y = density, type = "l")
+```
+
 
 ### Probability functions
 
@@ -529,13 +602,19 @@ Make similar plots for the standard exponential distribution.
 :::
 
 ```{r}
-# your code goes here
+x <- seq(-3, 3, 1e-3)
+de <- dexp(x ,1)
+plot(x, de, type = "l")
 ```
 
 :::{.callout-tip title="Test your understanding"}
 
 
-- What do you think are the names of the equivalent functions for the continuous uniform distribution? 
+- What do you think are the names of the equivalent functions for the continuous uniform distribution?
+
+*Answer*
+- dunif, etc.
+
 - Why might one of these names be confusing?
 :::
 
@@ -617,7 +696,20 @@ e) Use `hist()` to create a histogram for each of your samples.
 :::
 
 ```{r}
-# your code goes here
+ds1 <- rnorm(50, 0, 1)
+ds2 <- rnorm(20, 2, 5)
+
+q1 <- qqnorm(ds1)
+q2 <- qqnorm(ds2)
+
+plot(ds1, q1, type="l")
+
+hist(ds2)
+
+```
+
+```{r}
+ds2
 ```
 
 
@@ -644,6 +736,7 @@ print('...')
 for (i in 1:26){
   print(letters[i])
 }
+letters
 ```
 
 Here `i` is a _dummy variable_. It exists only within that for look and progresses through the values of `c(1, 2, ..., 26)` as the code in curly brackets gets executed for each of these values.
@@ -664,7 +757,9 @@ Write a loop that prints whether each number from 1 to 5 is even or odd.
 :::
 
 ```{r}
-# your code goes here
+for (i in 1:5) {
+  print(paste(i, " is ", if(i %% 2 == 1) "odd" else "even"))
+}
 ```
 
 :::{.callout-tip title="Test your understanding"}
@@ -751,7 +846,7 @@ Write a loop that prints whether each number from 1 to 5 is even or odd. You mig
 :::
 
 ```{r}
-# your code goes here
+
 ```
 
 :::{.callout-tip title="Test your understanding"}
@@ -760,8 +855,24 @@ Write code that picks a number $N$ between 5 and 10 (inclusive) uniformly at ran
 :::
 
 ```{r}
-# your code goes here
+genRnd <- function() {
+  return(round(runif(1, min=5, max=10)))
+}
 ```
+
+```{r}
+printVals <- function() {
+  set.seed(1)
+  for (i in 1:10) {
+    val <- genRnd()
+    print(paste(val, " is ", if (val %% 2 == 0) "even" else "odd"))
+  }
+}
+
+
+printVals()
+```
+
 
 :::{.callout-tip title="Test your understanding"}
 
@@ -769,7 +880,15 @@ Write code that starts with an empty vector `c()` and simulates exponential rand
 :::
 
 ```{r}
-# your code goes here
+set.seed(1)
+res <- c()
+sum <- 0
+while (sum <= 10) {
+  val <- rexp(1)
+  res <- append(res, val)
+  sum <- sum + val
+}
+res
 ```
 
 
